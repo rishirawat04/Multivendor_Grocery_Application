@@ -1,0 +1,29 @@
+/* TopCategories.css */
+@keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes zoomIn {
+    from {
+      transform: scale(0.8);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  
+  .card {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .card img {
+    animation: zoomIn 0.6s ease-out;
+  }
+  

@@ -1,0 +1,11 @@
+@media (max-width: 639px) {
+    .promo-banner {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  
+    .promo-content {
+      min-width: max-content;
+      padding-right: 20px; /* Add some padding for the close button */
+    }
+  }
