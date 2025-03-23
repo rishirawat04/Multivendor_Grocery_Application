@@ -16,8 +16,8 @@ const app = express();
 
 // Define allowed origins based on environment
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? ['https://multivendor-application.onrender.com', 'https://yourfrontenddomain.com'] 
-  : ['http://localhost:3000'];
+  ? process.env.ALLOWED_ORIGINS_PRODUCTION
+  : process.env.ALLOWED_ORIGINS_DEVELOPMENT?.split(',') || ['http://localhost:3000'];
 
 export const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
