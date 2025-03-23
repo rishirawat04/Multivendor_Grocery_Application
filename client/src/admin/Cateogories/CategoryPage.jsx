@@ -13,7 +13,6 @@ import {
   IconButton,
   Modal,
   Typography,
-  Chip,
   Collapse,
   List,
   ListItem,
@@ -37,7 +36,6 @@ import {
 } from '@mui/icons-material'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../API/api'
-import axios from 'axios'
 import uploadImageToCloudinary from '../../cloudinary/cloudinary'
 
 

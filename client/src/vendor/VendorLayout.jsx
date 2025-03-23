@@ -258,24 +258,22 @@ const VendorLayout = () => {
 
   // Routing logic
   useEffect(() => {
-    // Get the current path and replace '/vendor/' with 'vendor / '
-    let path = window.location.pathname.replace('/vendor/', 'vendor / ')
-
-    // Remove hyphens and replace them with spaces
-    path = path.replace(/-/g, ' ')
-
-    // Convert the path to uppercase
-    const uppercaseRoute =
-      path.charAt(0).toUpperCase() + path.slice(1).toUpperCase()
+    // Extract current route from pathname
+    const pathname = window.location.pathname
+    const uppercaseRoute = pathname
+      .split('/')
+      .filter(segment => segment !== 'vendor' && segment !== '')
+      .map(segment => segment.toUpperCase())
+      .join(' ')
 
     // If no specific route, default to 'DASHBOARD'
     setCurrentRoute(uppercaseRoute || 'DASHBOARD')
-  }, [window.location.pathname])
+  }, [])
 
   useEffect(() => {
     getOrders()
     getUserDetails()
-  }, [])
+  }, [getUserDetails])
 
   return (
     <Box sx={{ display: 'flex' }}>

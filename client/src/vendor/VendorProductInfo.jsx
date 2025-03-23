@@ -15,7 +15,6 @@ import {
   Save,
   ExitToApp,
   Cancel,
-  ExitToAppSharp
 } from '@mui/icons-material'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../API/api'
@@ -26,7 +25,6 @@ const VendorProductInfo = () => {
   const navigate = useNavigate()
 
   // State management for product fields
-  const [product, setProduct] = useState(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
@@ -61,7 +59,6 @@ const VendorProductInfo = () => {
       console.log(response.data)
 
       // Set product fields
-      setProduct(productData)
       setName(productData.name)
       setDescription(productData.description)
       setPrice(productData.price)

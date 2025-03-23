@@ -65,13 +65,6 @@ const VendorRevenue = () => {
     }
   };
 
-  // Sorting logic
-  const handleRequestSort = property => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
-
   // Sorting orders based on selected column
   const sortedOrders = orders.sort((a, b) => {
     if (order === 'asc') {

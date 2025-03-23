@@ -26,7 +26,6 @@ import {
 import {
   Edit,
   Delete,
-  Search as SearchIcon,
   FilterList as FilterListIcon
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'

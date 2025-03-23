@@ -14,7 +14,6 @@ import {
   InputBase,
   Avatar,
   Divider,
-  Badge,
   CircularProgress
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
@@ -33,7 +32,6 @@ import {
   FaTags,
   FaCog,
   FaCommentAlt,
-  FaBell
 } from 'react-icons/fa'
 
 import { Link, Outlet, useNavigate } from 'react-router-dom'
@@ -168,10 +166,6 @@ const Layout = () => {
     navigate(link) // Use navigate to route to the appropriate page
   }
 
-  const handleLogout = () => {
-    navigate("/login")
-    logout()
-  }
 
   const handleMouseEnter = () => {
     // Set a delay before showing the dropdown

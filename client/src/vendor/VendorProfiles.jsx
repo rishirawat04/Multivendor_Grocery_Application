@@ -101,7 +101,7 @@ const VendorProfiles = () => {
     };
 
     fetchUserDetails();
-  }, []);
+  }, [user.id]);
 
   // GET ALL PRODUCTS 
   const getProduct = async () => {

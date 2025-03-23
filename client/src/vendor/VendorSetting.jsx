@@ -79,7 +79,7 @@ const VendorSetting = () => {
 
   useEffect(() => {
     getUserDetails();
-  }, []);
+  }, [user.id]);
 
   return (
     <Box sx={{ px: { xs: 1, sm: 2 }, mt: 2, backgroundColor: '#fff' }}>

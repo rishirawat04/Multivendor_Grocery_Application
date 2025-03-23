@@ -15,7 +15,6 @@ import {
   Save,
   ExitToApp,
   Cancel,
-  ExitToAppSharp
 } from '@mui/icons-material'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../API/api'

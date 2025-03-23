@@ -42,7 +42,6 @@ import {
   Legend
 } from 'chart.js'
 import api from '../API/api'
-import { Try } from '@mui/icons-material'
 
 // Register Chart.js components
 ChartJS.register(
@@ -133,13 +132,15 @@ const initialLineData = {
 
 
 const VendorDashboard = ({ sidebarOpen }) => {
-  const [order, setOrder] = useState('asc')
-  const [orderBy, setOrderBy] = useState('customer')
+  const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(5)
-  
-  const [searchQuery, setSearchQuery] = useState('');
+  const [order, setOrder] = useState('asc')
+  const [orderBy, setOrderBy] = useState('customer')
+  const [chartData, setChartData] = useState([])
   const [orders,  setOrders] = useState([])
+  const [productStats, setProductStats] = useState([])
+  const [orderData, setOrderData ] = useState()
   const [selectedDateRange, setSelectedDateRange] = useState([null, null])
   const [filteredLineData, setFilteredLineData] = useState(initialLineData)
   const [topProducts, setTopProducts] = useState([]); // State for storing product data
@@ -148,7 +149,6 @@ const VendorDashboard = ({ sidebarOpen }) => {
   
 
   // dashboard states 
-  const [orderData, setOrderData ] = useState()
   const [productData, setProductData ] = useState([])
 
 
