@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -14,7 +14,8 @@ import {
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import api from "../../API/api";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import config from "../../config";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -22,7 +23,6 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 
 const CheckoutForm = () => {
   const { userId } = useParams();
-  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [cartTotal, setCartTotal] = useState(0);
@@ -36,21 +36,19 @@ const CheckoutForm = () => {
     ],
   });
 
-  const [couponCode, setCouponCode] = useState("");
-  const [showCouponInput, setShowCouponInput] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-
-  useEffect(() => {
-    if (userId) {
-      fetchCartData();
-      fetchUserDetails();
-    }
-  }, [userId]);
-
-  // Fetch cart details and calculate subtotal
-  const fetchCartData = async () => {
+  
+  // Define showSnackbar before using it in useCallback functions, wrapped in useCallback
+  const showSnackbar = useCallback((message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setOpenSnackbar(true);
+  }, []);
+  
+  // Use useCallback to memoize the functions for useEffect dependencies
+  const fetchCartData = useCallback(async () => {
     try {
       const response = await api.get("/cart", { withCredentials: true });
       const products = response.data.products;
@@ -64,10 +62,10 @@ const CheckoutForm = () => {
     } catch (error) {
       showSnackbar("Failed to load cart details", "error");
     }
-  };
+  }, [showSnackbar]);
 
   // Fetch user details for shipping and billing address
-  const fetchUserDetails = async () => {
+  const fetchUserDetails = useCallback(async () => {
     try {
       const response = await api.get(`/users/profile/${userId}`, {
         withCredentials: true,
@@ -84,7 +82,14 @@ const CheckoutForm = () => {
     } catch (error) {
       showSnackbar("Failed to load user details", "error");
     }
-  };
+  }, [userId, showSnackbar]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchCartData();
+      fetchUserDetails();
+    }
+  }, [userId, fetchCartData, fetchUserDetails]);
 
   const updateUserProfile = async () => {
     try {
@@ -104,43 +109,40 @@ const CheckoutForm = () => {
     }
   };
 
-  const handleApplyCoupon = async () => {
-    try {
-      const response = await api.post(
-        "/cart/apply-coupon",
-        { couponCode },
-        { withCredentials: true }
-      );
-      const discount = response.data.discount;
-      setCartTotal(cartTotal - discount);
-      showSnackbar("Coupon applied successfully", "success");
-    } catch (error) {
-      showSnackbar("Failed to apply coupon", "error");
-    }
-  };
-
-  const createOrder = async () => {
-    if (paymentMethod === "Code") {
+  // Wrap createOrder function in useCallback to stabilize it
+  const createOrder = useCallback(async () => {
+    if (paymentMethod === "cod") {
       showSnackbar("Order placed successfully with COD!", "success");
       return;
     }
 
     try {
+      // Recalculate the total to ensure it's accurate
+      const recalculatedTotal = cartData.reduce((acc, item) => {
+        return acc + (item?.product?.discountedPrice || 0) * item.quantity;
+      }, 0);
+
+      // Check if there's a significant difference between displayed and calculated totals
+      if (Math.abs(recalculatedTotal - cartTotal) > 0.01) {
+        setCartTotal(recalculatedTotal);
+        showSnackbar("Cart total has been updated. Please review before proceeding.", "warning");
+        return;
+      }
+
       const response = await api.post("/orders/create-order", {
         userId: userId,
         products: cartData.map((item) => ({
           product: item?.product._id,
           quantity: item.quantity,
         })),
-        totalPrice: cartTotal,
+        totalPrice: recalculatedTotal,
       });
-console.log("run");
 
       const { razorpayOrderId } = response.data;
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        amount: cartTotal * 100,
+        key: config.RAZORPAY_KEY_ID,
+        amount: recalculatedTotal * 100,
         currency: "INR",
         name: "RawatTech 04",
         description: "rawattech04: Innovative, Creative, Dynamic",
@@ -170,11 +172,11 @@ console.log("run");
         showSnackbar("Razorpay SDK not loaded", "error");
       }
     } catch (error) {
-      showSnackbar("Failed to create order", "error");
+      showSnackbar(error.response?.data?.message || "Failed to create order", "error");
     }
-  };
+  }, [cartData, cartTotal, paymentMethod, showSnackbar, userId, userDetails, verifyPayment]);
 
-  const verifyPayment = async (paymentResponse) => {
+  const verifyPayment = useCallback(async (paymentResponse) => {
     try {
       const response = await api.post("/orders/verify-payment", {
         razorpayOrderId: paymentResponse.razorpay_order_id,
@@ -190,13 +192,7 @@ console.log("run");
     } catch (error) {
       showSnackbar("Payment verification failed", "error");
     }
-  };
-
-  const showSnackbar = (message, severity) => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setOpenSnackbar(true);
-  };
+  }, [showSnackbar]);
 
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);

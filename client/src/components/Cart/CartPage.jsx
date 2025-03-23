@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -39,10 +39,15 @@ const CartPage = () => {
   const [totalWithoutDiscount, setTotalWithoutDiscount] = useState(0) // Store total before discount
   const [loading, setLoading] = useState(true); 
 
- 
+  // Function to show the Snackbar
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message)
+    setSnackbarSeverity(severity)
+    setOpenSnackbar(true)
+  }
 
-  // Function to fetch cart data
-  const fetchCartData = async () => {
+  // Function to fetch cart data, using useCallback to memoize
+  const fetchCartData = useCallback(async () => {
     setLoading(true); 
     try {
       const response = await api.get('/cart', { withCredentials: true })
@@ -50,22 +55,22 @@ const CartPage = () => {
       setCartItems(products)
       setUserId(response.data.user)
       
-      
-
-       // Calculate initial total without discount
-       const total = products?.reduce(
+      // Calculate initial total without discount
+      const total = products?.reduce(
         (total, item) => total + item?.product?.discountedPrice * item?.quantity,
         0
       )
       setTotalWithoutDiscount(total)
-
-      
     } catch (error) {
       showSnackbar('Failed to load cart data', 'error')
     } finally {
       setLoading(false); // Stop loading when the async operation is done
     }
-  }
+  }, [showSnackbar])
+
+  useEffect(() => {
+    fetchCartData()
+  }, [fetchCartData])
 
   // Function to update product quantity in the cart
   const handleQuantityChange = async (productId, newQuantity) => {
@@ -84,7 +89,7 @@ const CartPage = () => {
 
       // Recalculate total after updating quantity
       const updatedTotal = cartItems?.reduce(
-        (total, item) => total + item?.product?.price * item?.quantity,
+        (total, item) => total + item?.product?.discountedPrice * item?.quantity,
         0
       )
       setTotalWithoutDiscount(updatedTotal)
@@ -111,7 +116,7 @@ const CartPage = () => {
 
       // Recalculate total after removing product
       const updatedTotal = cartItems?.reduce(
-        (total, item) => total + item?.product?.price * item?.quantity,
+        (total, item) => total + item?.product?.discountedPrice * item?.quantity,
         0
       )
       setTotalWithoutDiscount(updatedTotal)
@@ -120,13 +125,6 @@ const CartPage = () => {
     }  finally {
       setLoading(false); // Stop loading
     }
-  }
-
-  // Function to show the Snackbar
-  const showSnackbar = (message, severity) => {
-    setSnackbarMessage(message)
-    setSnackbarSeverity(severity)
-    setOpenSnackbar(true)
   }
 
   // Handle Snackbar close
@@ -160,12 +158,6 @@ const handleApplyCoupon = async () => {
 }
 
 const finalTotal = totalWithoutDiscount - discount
-
-
-
-useEffect(() => {
-  fetchCartData()
-}, [])
 
 if (loading) {
   // Display loading spinner while data is being fetched or updated
@@ -206,7 +198,6 @@ if (loading) {
               const product = item.product || {};
               const image = Array.isArray(product.image) && product.image.length > 0 ? product.image[0] : 'default-image-url';
               const productName = product.name || 'Unnamed Product';
-              const productPrice = product.price || 0;
               const itemQuantity = item.quantity || 0;
               const discountedPrice = product.discountedPrice || 0;
 

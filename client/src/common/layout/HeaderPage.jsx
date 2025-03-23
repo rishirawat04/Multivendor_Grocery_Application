@@ -425,8 +425,8 @@ const HeaderPage = () => {
                           </p>
                           <p className='text-xs text-gray-500'>
                             {item?.quantity} x $
-                            {item?.product?.price
-                              ? item.product.price.toFixed(2)
+                            {item?.product?.discountedPrice
+                              ? item.product.discountedPrice.toFixed(2)
                               : '0.00'}{' '}
                             {/* Fallback if price is missing */}
                           </p>
@@ -592,8 +592,8 @@ const HeaderPage = () => {
                               </p>
                               <p className='text-xs text-gray-500'>
                                 {item?.quantity} x $
-                                {item?.product?.price
-                                  ? item.product.price.toFixed(2)
+                                {item?.product?.discountedPrice
+                                  ? item.product.discountedPrice.toFixed(2)
                                   : '0.00'}{' '}
                                 {/* Fallback if price is missing */}
                               </p>

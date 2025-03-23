@@ -134,7 +134,7 @@ export const applyCoupon = async (req, res) => {
   
       // Calculate the total price of the cart
       const totalCartAmount = cartItems.reduce(
-        (total, item) => total + item.product.price * item.quantity,
+        (total, item) => total + item.product.discountedPrice * item.quantity,
         0
       );
   

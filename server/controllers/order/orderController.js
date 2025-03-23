@@ -99,6 +99,13 @@ export const verifyPayment = async (req, res) => {
       throw new Error("Order not found");
     }
 
+    // Check if payment was already processed
+    if (order.paymentStatus === 'Paid') {
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({ message: "Payment already processed", order });
+    }
+
     // Generate expected signature
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -107,7 +114,10 @@ export const verifyPayment = async (req, res) => {
 
     // Compare signatures
     if (generatedSignature !== razorpaySignature) {
-      console.error("Signature mismatch");
+      console.error("Signature mismatch", { 
+        received: razorpaySignature,
+        generated: generatedSignature
+      });
       order.paymentStatus = "Failed";
       await order.save({ session });
       await session.commitTransaction();
@@ -119,6 +129,7 @@ export const verifyPayment = async (req, res) => {
     order.paymentStatus = "Paid";
     order.razorpayPaymentId = razorpayPaymentId;
     order.razorpaySignature = razorpaySignature;
+    order.updatedAt = new Date();
     await order.save({ session });
 
     await session.commitTransaction();

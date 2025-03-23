@@ -1,9 +1,37 @@
 import axios from 'axios';
 
-// Create a global Axios instance
+// Determine the base URL based on the environment
+const baseURL = process.env.NODE_ENV === 'production' 
+  ? process.env.REACT_APP_PROD_API_URL 
+  : process.env.REACT_APP_DEV_API_URL;
+
+// Create a global Axios instance with the appropriate baseURL
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1/'      
+  baseURL,
+  withCredentials: true
 });
+
+// Add request interceptor for error handling
+api.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error('API Response Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 export default api;
 
