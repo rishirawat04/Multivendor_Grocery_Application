@@ -153,40 +153,33 @@ const VendorDashboard = ({ sidebarOpen }) => {
 
 
   const getOrders = async() => {
-         try {
-          const response = await api.get('/vendor/orders', 
-            {
-              withCredentials: true
-            }
-            
-          )
-          // console.log(response.data);
-          setOrders(response.data.orders || []);
-          setOrderData(response.data)
-          
-         } catch (error) {
-          console.log(error);
-          
-         }
+    try {
+      const response = await api.get('/vendor/orders', 
+        {
+          withCredentials: true
+        }
+      )
+      setOrders(response.data.orders || []);
+      setOrderData(response.data)
+    } catch (error) {
+      setOrders([]);
+      setOrderData(null);
+    }
   }
 
 
   const getProducts = async() => {
     try {
-     const response = await api.get('/vendor/products', 
-       {
-         withCredentials: true
-       }
-       
-     )
-    // console.log("data",response.data);
-     setProductData(response.data)
-     
+      const response = await api.get('/vendor/products', 
+        {
+          withCredentials: true
+        }
+      )
+      setProductData(response.data)
     } catch (error) {
-     console.log(error);
-     
+      setProductData([]);
     }
-}
+  }
 
 
 
@@ -282,9 +275,9 @@ const cardData = [
   const getTopSellingProduct = async () => {
     try {
       const response = await api.get('vendor/top-products', { withCredentials: true });
-      setTopProducts(response.data.topSellingProducts);
+      setTopProducts(response.data.topSellingProducts || []);
     } catch (error) {
-      console.log(error);
+      setTopProducts([]);
     }
   };
 
@@ -426,7 +419,7 @@ useEffect(() => {
             </Box>
             <Typography variant='body2' color='textSecondary' sx={{ mt: 1 }}>
               <span style={{ color: '#FFBB28' }}>●</span> Items Earning Sales:
-              {`$${orderData?.totalPaidRevenue + orderData?.totalPendingRevenue}`}
+              {orderData ? `$${(((orderData.totalPaidRevenue || 0) + (orderData.totalPendingRevenue || 0)) / 100).toFixed(2)}` : '$0.00'}
             </Typography>
           </Paper>
         </LocalizationProvider>
@@ -468,21 +461,23 @@ useEffect(() => {
                 EARNINGS
               </Typography>
               <Typography variant='h6' color='primary'>
-                {`$${orderData?.totalPaidRevenue + orderData?.totalPendingRevenue}`}
+                {orderData ? `$${(((orderData.totalPaidRevenue || 0) + (orderData.totalPendingRevenue || 0)) / 100).toFixed(2)}` : '$0.00'}
               </Typography>
             </Grid>
             <Grid item xs={6}>
               <Typography variant='body2' color='text.secondary'>
                 REVENUE
               </Typography>
-              <Typography variant='h6'>{`$${orderData?.totalPaidRevenue + orderData?.totalPendingRevenue}`}</Typography>
+              <Typography variant='h6'>
+                {orderData ? `$${(((orderData.totalPaidRevenue || 0) + (orderData.totalPendingRevenue || 0)) / 100).toFixed(2)}` : '$0.00'}
+              </Typography>
             </Grid>
             <Grid item xs={6}>
               <Typography variant='body2' color='text.secondary'>
                 WITHDRAWALS
               </Typography>
               <Typography variant='h6' color='error'>
-                $3,151.00
+                $0.00
               </Typography>
             </Grid>
             <Grid item xs={6}>
@@ -539,7 +534,11 @@ useEffect(() => {
                      <TableCell>{index + 1}</TableCell>
                     <TableCell>{row.orderId || 'N/A'}</TableCell>
                     <TableCell>{row.user?.name || 'N/A'}</TableCell>
-                    <TableCell>${row.totalPrice?.toFixed(2) || 'N/A'}</TableCell>
+                    <TableCell>
+                      {row.totalPrice 
+                        ? `$${(row.totalPrice / 100).toFixed(2)}` 
+                        : '$0.00'}
+                    </TableCell>
                     <TableCell><StatusChip2 status={row.paymentStatus} /></TableCell>
                     <TableCell>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                     <TableCell>{row.deliveryAddress?.city || 'N/A'}</TableCell>
@@ -601,7 +600,11 @@ useEffect(() => {
                     <TableCell>{index + 1}</TableCell>
                   <TableCell>{row.id}</TableCell>
                   <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.amount}</TableCell>
+                  <TableCell>
+                    {row.amount 
+                      ? `$${(row.amount / 100).toFixed(2)}` 
+                      : '$0.00'}
+                  </TableCell>
                   <TableCell>
                     <StatusChip status={row.status} />
                   </TableCell>

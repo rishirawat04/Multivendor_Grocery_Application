@@ -40,17 +40,22 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false CI=false react-scripts build",
     "build:production": "GENERATE_SOURCEMAP=false CI=false NODE_ENV=production react-scripts build",
     "start:production": "NODE_ENV=production react-scripts start",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "postinstall": "npx update-browserslist-db@latest"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "react-hooks/exhaustive-deps": "warn",
+      "no-unused-vars": "warn"
+    }
   },
   "browserslist": {
     "production": [
@@ -65,7 +70,11 @@
     ]
   },
   "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/eslint-parser": "^7.23.9",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/preset-env": "^7.23.9",
+    "@babel/preset-react": "^7.23.3",
     "tailwindcss": "^3.4.8"
   }
 }

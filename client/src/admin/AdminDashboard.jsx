@@ -102,11 +102,12 @@ const AdminDashboard = () => {
       const response = await api.get('/admin/orders', {
         withCredentials: true
       })
-      console.log(response.data);
+      // console.log(response.data);
       
       setOrderValue(response.data)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      setOrderValue(null)
     }
   }
 
@@ -117,7 +118,8 @@ const AdminDashboard = () => {
       })
       setProductValue(response.data)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      setProductValue(null)
     }
   }
 
@@ -128,7 +130,8 @@ const AdminDashboard = () => {
       })
       setCustomerValue(response.data)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      setCustomerValue(null)
     }
   }
 
@@ -139,7 +142,8 @@ const AdminDashboard = () => {
       })
       setReviewValue(response.data)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      setReviewValue(null)
     }
   }
 
@@ -176,12 +180,13 @@ const AdminDashboard = () => {
           withCredentials: true
         }
       )
-      console.log(response)
+      // console.log(response)
       if (response.data.success) {
         setTopProducts(response.data.topProducts)
       }
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      setTopProducts([])
     }
   }
 
