@@ -16,6 +16,7 @@ import ShareIcon from '@mui/icons-material/Share'
 import MuiAlert from '@mui/material/Alert'
 import api from '../../API/api'
 import { useParams } from 'react-router-dom'
+import { cartUpdateEvent } from './ProuductCard' // Import the cart update event
 
 // Snackbar Alert component
 const Alert = React.forwardRef(function Alert (props, ref) {
@@ -65,6 +66,9 @@ const SingleProduct = () => {
       // Use the message returned from the server
       setSnackbarSeverity('success')
       setSnackbarMessage(response.data.message) // Use server response message
+      
+      // Dispatch the cart update event
+      document.dispatchEvent(cartUpdateEvent);
     } catch (error) {
       setSnackbarSeverity('error')
       // Set the snackbar message based on server response or default

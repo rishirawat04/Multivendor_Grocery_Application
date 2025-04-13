@@ -129,7 +129,13 @@ const navLinks = [
     icon: <FaCog size={30} />,
     link: '/admin/settings',
     iconColor: '#2ecc71'
-  } // Green
+  }, // Green
+  {
+    text: 'Deals of the Day',
+    icon: <FaTags size={30} />,
+    link: '/admin/deals',
+    iconColor: '#e74c3c'
+  }, // Red
 ]
 
 

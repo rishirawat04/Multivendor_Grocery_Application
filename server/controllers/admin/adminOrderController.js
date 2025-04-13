@@ -10,9 +10,12 @@ export const getAllOrders = async (req, res) => {
     const userId = req.user._id;  // Assuming req.user contains the logged-in user's information
     const accountType = req.user.accountType; // Vendor or Admin
     const vendorProducts = req.user.products; // Vendor's products
-console.log("vP",vendorProducts);
+    console.log("vP",vendorProducts);
 
     let orders;
+    let totalPaidAmount = 0;
+    let totalPendingAmount = 0;
+    let totalRevenue = 0;
 
     if (accountType === 'Vendor') {
       // If the user is a Vendor, fetch all orders that contain any of the vendor's products
@@ -30,13 +33,33 @@ console.log("vP",vendorProducts);
       orders = await Order.find()
         .populate('user', 'fullName email')
         .populate('products.product', 'name price vendorShop');
+      
+      // Calculate totals for admin dashboard
+      orders.forEach(order => {
+        const orderAmount = order.totalPrice || 0;
+        
+        if (order.paymentStatus === 'Paid') {
+          totalPaidAmount += orderAmount;
+        } else if (order.paymentStatus === 'Pending') {
+          totalPendingAmount += orderAmount;
+        }
+        
+        // Total revenue is the sum of all orders regardless of payment status
+        totalRevenue += orderAmount;
+      });
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
     console.log(orders);
     
-
-    res.status(200).json({ success: true, totalOrders: orders.length, orders });
+    res.status(200).json({ 
+      success: true, 
+      totalOrders: orders.length, 
+      totalPaidAmount,
+      totalPendingAmount,
+      totalRevenue,
+      orders 
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -1,15 +1,16 @@
 import express from 'express';
 
 
-import { createProduct, deleteProduct, getAllProducts, getProductById, getProductsByCategory, updateProduct } from '../controllers/products/productController.js';
+import { createProduct, deleteProduct, getAllProducts, getProductById, getProductsByCategory, getProductsBySubcategory, updateProduct } from '../controllers/products/productController.js';
 import { authorizeRoles, protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Public Routes
 router.route('/').get(getAllProducts); // Get all products
-router.route('/:id').get(getProductById); // Get a single product by ID
-router.route('/category/:categoryId').get(getProductsByCategory);
+router.route('/category/:categoryId').get(getProductsByCategory); // Get products by category
+router.route('/subcategory/:subcategoryId').get(getProductsBySubcategory); // Get products by subcategory
+router.route('/:id').get(getProductById); // Get a single product by ID - This should be last
 
 
 // Admin and Vendor Routes (Protected)

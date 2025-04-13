@@ -8,6 +8,8 @@ import { Box, CircularProgress } from '@mui/material';
 import RedirectIfAuthenticated from './auth/GuestRoute';
 import UserProfile from './components/Userprofile';
 import SingleProduct from './components/AllProducts/SingleProduct';
+import CategoryPage from './components/CategoryPage/CategoryPage';
+import AllCategoriesPage from './components/CategoryPage/AllCategoriesPage';
 
 
 
@@ -27,11 +29,12 @@ const OrderPage = lazy(() => import('./admin/OrderPage'));
 const ProductPage = lazy(() => import('./admin/ProductPage'));
 const ShipmentPage = lazy(() => import('./admin/ShipmentPage'));
 const ProductPrice = lazy(() => import('./admin/ProductPrice'));
-const CategoryPage = lazy(() => import('./admin/Cateogories/CategoryPage'));
+const AdminCategoryPage = lazy(() => import('./admin/Cateogories/CategoryPage'));
 const BrandsPage = lazy(() => import('./admin/BrandsPage'));
 const ReviewsPage = lazy(() => import('./admin/ReviewsPage'));
 const CustomerPage = lazy(() => import('./admin/CustomerPage'));
 const DiscountPage = lazy(() => import('./admin/DiscountPage'));
+const DealsPage = lazy(() => import('./admin/DealsPage'));
 const VendorsPage = lazy(() => import('./admin/VendorsPage'));
 const TransactionsPage = lazy(() => import('./admin/TransactionPage'));
 const PaymentMethods = lazy(() => import('./admin/PaymentMethod'));
@@ -83,6 +86,10 @@ const App = () => {
       <Route path="/homepage" element={<LayoutPage><Suspense fallback={<LoadingFallback />}><HomePage /></Suspense></LayoutPage>} />
       <Route path="/product/:productId" element={<LayoutPage><Suspense fallback={<LoadingFallback />}><SingleProduct /></Suspense></LayoutPage>} />
       
+      {/* Category routes */}
+      <Route path="/category" element={<LayoutPage><Suspense fallback={<LoadingFallback />}><AllCategoriesPage /></Suspense></LayoutPage>} />
+      <Route path="/category/:categoryId" element={<LayoutPage><Suspense fallback={<LoadingFallback />}><CategoryPage /></Suspense></LayoutPage>} />
+      
       {/* Protected routes that require login */}
       <Route element={<ProtectedRoute allowedRoles={['User']} />}>
         <Route path="/cart" element={<LayoutPage><Suspense fallback={<LoadingFallback />}><CartPage /></Suspense></LayoutPage>} />
@@ -121,11 +128,12 @@ const App = () => {
             <Route path="products" element={<ProductPage />} />
             <Route path="shipments" element={<ShipmentPage />} />
             <Route path="product-prices" element={<ProductPrice />} />
-            <Route path="categories" element={<CategoryPage />} />
+            <Route path="categories" element={<AdminCategoryPage />} />
             <Route path="brands" element={<BrandsPage />} />
             <Route path="reviews" element={<ReviewsPage />} />
             <Route path="customers" element={<CustomerPage />} />
             <Route path="discounts" element={<DiscountPage />} />
+            <Route path="deals" element={<DealsPage />} />
             <Route path="vendors" element={<VendorsPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="payments" element={<PaymentMethods />} />

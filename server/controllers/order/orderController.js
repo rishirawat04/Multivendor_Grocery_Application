@@ -20,14 +20,31 @@ export const createOrder = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { userId, products, totalPrice } = req.body;
+    const { userId, products, totalPrice, deliveryAddress } = req.body;
 
     // User validation
     const user = await User.findById(userId);
-    if (!user || !user.addresses || user.addresses.length === 0) {
-      throw new Error('User address not found');
+    if (!user) {
+      throw new Error('User not found');
     }
-    const deliveryAddress = user.addresses[0];
+
+    // Validate deliveryAddress
+    let orderDeliveryAddress;
+    if (deliveryAddress && deliveryAddress.city && deliveryAddress.state && 
+        deliveryAddress.homeNumber && deliveryAddress.pinCode) {
+      // Use the address provided in the request
+      orderDeliveryAddress = deliveryAddress;
+      
+      // Optionally update the user's saved address if it doesn't exist
+      if (!user.addresses || user.addresses.length === 0) {
+        await User.findByIdAndUpdate(userId, { addresses: [deliveryAddress] }, { session });
+      }
+    } else if (user.addresses && user.addresses.length > 0) {
+      // Fallback to user's saved address
+      orderDeliveryAddress = user.addresses[0];
+    } else {
+      throw new Error('Delivery address not provided and no saved address found');
+    }
 
     // Calculate price and validate stock
     let calculatedPrice = 0;
@@ -38,7 +55,7 @@ export const createOrder = async (req, res) => {
       }
       calculatedPrice += product.discountedPrice * item.quantity;
     }
-    if (calculatedPrice !== totalPrice) {
+    if (Math.abs(calculatedPrice - totalPrice) > 0.01) {
       throw new Error('Price mismatch. Please refresh the page.');
     }
 
@@ -58,23 +75,30 @@ export const createOrder = async (req, res) => {
       totalPrice,
       paymentStatus: 'Pending',
       razorpayOrderId: razorpayOrder.id,
-      deliveryAddress,
+      deliveryAddress: orderDeliveryAddress,
     });
+    
     for (const item of products) {
       const product = await Product.findById(item.product).session(session);
       product.stock -= item.quantity;
       await product.save({ session });
     }
+    
     await order.save({ session });
     await User.findByIdAndUpdate(userId, { $push: { orders: order._id } }, { session });
 
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({ orderId: order._id, razorpayOrderId: razorpayOrder.id });
+    res.status(201).json({ 
+      orderId: order._id, 
+      razorpayOrderId: razorpayOrder.id,
+      message: "Order created successfully"
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    console.error("Order creation error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -88,7 +112,7 @@ export const verifyPayment = async (req, res) => {
   console.log("Verifying payment...");
 
   try {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, deliveryAddress } = req.body;
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       throw new Error("Missing payment details");
@@ -104,6 +128,11 @@ export const verifyPayment = async (req, res) => {
       await session.commitTransaction();
       session.endSession();
       return res.status(200).json({ message: "Payment already processed", order });
+    }
+
+    // Update delivery address if provided and not already set
+    if (deliveryAddress && (!order.deliveryAddress || Object.keys(order.deliveryAddress).length === 0)) {
+      order.deliveryAddress = deliveryAddress;
     }
 
     // Generate expected signature
@@ -131,6 +160,17 @@ export const verifyPayment = async (req, res) => {
     order.razorpaySignature = razorpaySignature;
     order.updatedAt = new Date();
     await order.save({ session });
+
+    // Update user's address if it doesn't exist
+    if (deliveryAddress && order.user) {
+      const user = await User.findById(order.user);
+      if (user && (!user.addresses || user.addresses.length === 0)) {
+        await User.findByIdAndUpdate(order.user, 
+          { addresses: [deliveryAddress] }, 
+          { session }
+        );
+      }
+    }
 
     await session.commitTransaction();
     session.endSession();

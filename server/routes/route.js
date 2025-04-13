@@ -15,6 +15,7 @@ import orderRoutes from './orderRoutes.js'
 import reviewRoutes from './reviewRoutes.js'
 import discountRoutes from './discountRoute.js'
 import brandRoutes from './BrandRoutes.js'
+import offerRoutes from './offerRoutes.js'
 
 
 
@@ -32,6 +33,7 @@ router.use('/orders', orderRoutes )
 router.use('/review', reviewRoutes )
 router.use('/coupon', discountRoutes )
 router.use('/', brandRoutes )
+router.use('/', offerRoutes)
 
 
 

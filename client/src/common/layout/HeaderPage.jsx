@@ -36,6 +36,8 @@ import api from '../../API/api'
 import { AuthContext } from '../../auth/AuthContext'
 import LogoutIcon from '@mui/icons-material/Logout'
 import LoginIcon from '@mui/icons-material/Login'
+import { cartUpdateEvent } from '../../components/AllProducts/ProuductCard'
+
 const HeaderPage = () => {
   const { user, logout } = useContext(AuthContext)
 
@@ -288,7 +290,24 @@ const HeaderPage = () => {
     }
   }
 
-  // Function to fetch cart data
+  // Setup cart update listener
+  useEffect(() => {
+    // Function to handle the cart update event
+    const handleCartUpdate = () => {
+      fetchCartData();
+      console.log('Cart updated event received');
+    };
+
+    // Add event listener for cart updates
+    document.addEventListener('cart-updated', handleCartUpdate);
+
+    // Cleanup function
+    return () => {
+      document.removeEventListener('cart-updated', handleCartUpdate);
+    };
+  }, []);
+
+  //Fetch cart data 
   const fetchCartData = async () => {
     try {
       const response = await api.get('/cart', {

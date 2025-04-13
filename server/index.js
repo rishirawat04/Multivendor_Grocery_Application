@@ -36,7 +36,9 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true,  
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Middleware for cookies and parsing
@@ -61,15 +63,15 @@ connectDB();
 // Use centralized routes
 app.use('/api/v1', routes);
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static('../client/build'));
+// // Serve static files in production
+// if (process.env.NODE_ENV === 'production') {
+//   // Set static folder
+//   app.use(express.static('../client/build'));
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client', 'build', 'index.html'));
-  });
-}
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.resolve(__dirname, '../client', 'build', 'index.html'));
+//   });
+// }
 
 // Start the server and listen on the specified port
 const port = process.env.PORT || 4000;

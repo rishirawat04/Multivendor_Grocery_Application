@@ -27,7 +27,7 @@ import {
 } from '@mui/material'
 
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { IoCloseCircleOutline } from 'react-icons/io5'
 import { Link } from 'react-router-dom'
 import { Delete, Edit, FilterList as FilterListIcon } from '@mui/icons-material'

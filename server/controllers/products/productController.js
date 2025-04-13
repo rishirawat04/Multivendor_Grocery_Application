@@ -1,4 +1,3 @@
-
 import Brand from "../../models/BrandModel.js";
 import Product from "../../models/ProductModel.js";
 import Category from "../../models/categoryModel.js";
@@ -138,12 +137,35 @@ export const getProductById = async (req, res) => {
 
 // Get products by category (Public)
 export const getProductsByCategory = async (req, res) => {
-
-
     const { categoryId } = req.params; // Get categoryId from request parameters
     try {
-        const products = await Product.find({ category: categoryId }).populate('category').populate('subcategory'); // Find products by category
-        res.json(products); // Return the products found
+        // Find products by category and populate both category and subcategory references
+        const products = await Product.find({ category: categoryId })
+            .populate('category')
+            .populate('subcategory')
+            .populate('brand')
+            .sort({ createdAt: -1 }); // Sort by newest products first
+        
+        // Return the products found
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get products by subcategory (Public)
+export const getProductsBySubcategory = async (req, res) => {
+    const { subcategoryId } = req.params; // Get subcategoryId from request parameters
+    try {
+        // Find products by subcategory and populate references
+        const products = await Product.find({ subcategory: subcategoryId })
+            .populate('category')
+            .populate('subcategory')
+            .populate('brand')
+            .sort({ createdAt: -1 }); // Sort by newest products first
+        
+        // Return the products found
+        res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import Snackbar from '@mui/material/Snackbar'
@@ -10,6 +10,9 @@ import { Link } from 'react-router-dom'
 const Alert = React.forwardRef(function Alert (props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant='filled' {...props} />
 })
+
+// Create a custom event for cart updates
+export const cartUpdateEvent = new Event('cart-updated');
 
 const ProductCard = ({ product }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false)
@@ -38,6 +41,9 @@ const ProductCard = ({ product }) => {
       )
       setSnackbarSeverity('success')
       setSnackbarMessage(response.data.message)
+      
+      // Dispatch a custom event to notify that the cart has been updated
+      document.dispatchEvent(cartUpdateEvent);
     } catch (error) {
       setSnackbarSeverity('error')
       setSnackbarMessage(

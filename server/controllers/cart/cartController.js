@@ -108,3 +108,35 @@ export const removeFromCart = async (req, res) => {
         res.status(500).json({ message: 'Failed to remove product from cart' });
     }
 };
+
+// Clear all products from cart
+export const clearCart = async (req, res) => {
+    // Ensure req.user is defined
+    if (!req.user || !req.user._id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
+    const userId = req.user._id;
+
+    try {
+        // Find the cart for the user
+        const cart = await Cart.findOne({ user: userId });
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        // Clear all products from the cart
+        cart.products = [];
+        
+        // Save the updated cart
+        await cart.save();
+
+        return res.status(200).json({
+            message: 'Cart has been cleared',
+            cart,
+        });
+    } catch (error) {
+        console.error("Error clearing cart:", error);
+        res.status(500).json({ message: 'Failed to clear cart' });
+    }
+};

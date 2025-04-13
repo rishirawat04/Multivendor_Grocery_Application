@@ -12,6 +12,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/subCategory', getAllSubcategories);
+router.get('/subcategory/:categoryId', getSubcategoriesByCategoryId);
 
 
 
@@ -20,6 +21,5 @@ router.get('/subCategory', getAllSubcategories);
 router.post('/subCategory', protect, authorizeRoles('Admin'), createSubcategory);
 router.put('/subCategory/:id', protect, authorizeRoles('Admin'), updateSubcategory);
 router.delete('/subCategory/:id', protect, authorizeRoles('Admin'), deleteSubcategory);
-router.get('/subcategory/:categoryId', protect, authorizeRoles('Admin'), getSubcategoriesByCategoryId);
 
 export default router;

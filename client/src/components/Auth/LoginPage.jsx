@@ -69,11 +69,21 @@ const LoginPage = () => {
 
       const { token, user } = response.data // Assuming the response contains user info
       const { accountType } = user // Extract accountType from user object
+      
+      // Validate token before storing
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      
+      // Store token in localStorage
       localStorage.setItem('token', token)
-      // Save token to localStorage
-
+      
       // Set user and role in AuthContext
-      setUser({ id: user.id, fullName: user.fullName }) // Adjust as needed based on the user object
+      setUser({ 
+        id: user.id, 
+        fullName: user.fullName,
+        email: user.email
+      })
       setRole(accountType)
 
       // Show success toast notification
@@ -90,11 +100,16 @@ const LoginPage = () => {
         navigate('/')
       }
     } catch (error) {
+      console.error("Login error:", error);
+      
+      // More specific error message if available
+      const errorMessage = error.response?.data?.message || 'Invalid email or password';
+      
       // Show error toast notification
-      setToastMessage('Invalid email or password')
+      setToastMessage(errorMessage)
       setToastSeverity('error')
       setOpenToast(true)
-      setError('Invalid email or password')
+      setError(errorMessage)
     }
   }
 

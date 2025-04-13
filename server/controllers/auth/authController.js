@@ -62,7 +62,7 @@ export const registerUser = async (req, res) => {
 
 
 export const loginUser = async (req, res) => {
-  const { email, password,  rememberMe } = req.body;
+  const { email, password, rememberMe } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -74,15 +74,19 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Calculate token expiration based on rememberMe
+    const expiresIn = rememberMe ? '7d' : '24h';
+    
     const payload = { 
       id: user._id.toString(), 
-      accountType:user.accountType,
+      accountType: user.accountType,
+    };
+    
+    // Sign the token with appropriate expiration
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
 
-     };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    // Set token in an HTTP-only cookie
-    const maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 3600000; 
+    // Set token in an HTTP-only cookie with appropriate expiration
+    const maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; 
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -123,53 +127,64 @@ export const updateUserProfile = async (req, res) => {
       email,
       phoneNumber,
       userProfile,
-      city,
-      state,
-      homeNumber,
-      pinCode,
-      landmark,
+      addresses,
       shopName,
       shopLogo
     } = req.body; // Extract all fields from req.body
 
-    // Construct the updated address object
-    const updatedAddress = {
-      city,
-      state,
-      homeNumber,
-      pinCode,
-      landmark,
-    };
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Check if the user exists
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
 
     // Build the update object dynamically
-    const updateFields = {
-      fullName,
-      email,
-      phoneNumber,
-      userProfile, // User profile (profile picture URL)
-      addresses: [updatedAddress], // Update address array
-    };
+    const updateFields = {};
+    
+    // Add base fields if they exist
+    if (fullName) updateFields.fullName = fullName;
+    if (email) updateFields.email = email;
+    if (phoneNumber) updateFields.phoneNumber = phoneNumber;
+    if (userProfile) updateFields.userProfile = userProfile;
 
-    // Add vendor-specific fields only if provided and user is a Vendor
-    if (req.body.shopName) updateFields.shopName = shopName;
-    if (req.body.shopLogo) updateFields.shopLogo = shopLogo;
+    // Handle addresses - Check if addresses were provided in the correct format
+    if (addresses && Array.isArray(addresses) && addresses.length > 0) {
+      // Use the provided addresses array
+      updateFields.addresses = addresses;
+    } else if (req.body.city || req.body.state || req.body.homeNumber || req.body.pinCode) {
+      // Backward compatibility - if addresses were provided as direct properties
+      updateFields.addresses = [{
+        city: req.body.city || '',
+        state: req.body.state || '',
+        homeNumber: req.body.homeNumber || '',
+        pinCode: req.body.pinCode || '',
+        landmark: req.body.landmark || ''
+      }];
+    }
+
+    // Add vendor-specific fields only if provided
+    if (shopName) updateFields.shopName = shopName;
+    if (shopLogo) updateFields.shopLogo = shopLogo;
 
     // Find and update the user by ID, and return the new updated document
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updateFields },
-      { new: true, fields: 'userProfile, fullName email phoneNumber userProfile addresses shopName shopLogo ' } // Return only required fields
+      { new: true, select: 'userProfile fullName email phoneNumber addresses shopName shopLogo' } // Return only required fields
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    console.log('Updated user profile:', updatedUser);
 
     res.status(200).json({
       user: updatedUser,
       message: "Profile updated successfully!" // Success message
     });
   } catch (error) {
+    console.error('Profile update error:', error);
     res.status(500).json({ message: error.message });
   }
 };

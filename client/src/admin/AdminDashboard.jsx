@@ -34,7 +34,7 @@ import {
 } from 'react-icons/md'
 import IndiaMap from '../common/IndiaMap'
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import api from '../API/api'
 
 ChartJS.register(
@@ -221,6 +221,24 @@ const AdminDashboard = () => {
       value: reviewValue?.totalReviews,
       color: '#1F618D',
       icon: <MdRateReview size={50} style={{ opacity: 0.2 }} />
+    },
+    {
+      title: 'Total Revenue',
+      value: orderValue?.totalRevenue ? `$${(orderValue.totalRevenue / 100).toFixed(2)}` : '$0.00',
+      color: '#2E86C1',
+      icon: <MdRateReview size={50} style={{ opacity: 0.2 }} />
+    },
+    {
+      title: 'Paid Orders',
+      value: orderValue?.totalPaidAmount ? `$${(orderValue.totalPaidAmount / 100).toFixed(2)}` : '$0.00',
+      color: '#27AE60',
+      icon: <MdShoppingCart size={50} style={{ opacity: 0.2 }} />
+    },
+    {
+      title: 'Pending Payments',
+      value: orderValue?.totalPendingAmount ? `$${(orderValue.totalPendingAmount / 100).toFixed(2)}` : '$0.00',
+      color: '#F39C12',
+      icon: <MdShoppingCart size={50} style={{ opacity: 0.2 }} />
     }
   ]
 

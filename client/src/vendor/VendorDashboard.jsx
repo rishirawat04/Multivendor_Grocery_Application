@@ -30,7 +30,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 import 'chart.js/auto'
 import { DateRangePicker } from '@mui/x-date-pickers-pro'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 
 import {
   Chart as ChartJS,
@@ -217,19 +217,31 @@ const VendorDashboard = ({ sidebarOpen }) => {
 const cardData = [
   {
     title: 'Orders',
-    value: orderData?.totalOrders,
+    value: orderData?.totalOrders || 0,
     color: '#1abc9c',
     icon: <MdShoppingCart size={50} style={{ opacity: 0.2 }} />
   },
   {
     title: 'Products',
-    value: productData?.length,
+    value: productData?.length || 0,
     color: '#3498db',
     icon: <MdProductionQuantityLimits size={50} style={{ opacity: 0.2 }} />
   },
   {
-    title: 'Revenue',
-    value: `$${orderData?.totalPaidRevenue + orderData?.totalPendingRevenue}`,
+    title: 'Paid Revenue',
+    value: orderData?.totalPaidRevenue ? `$${(orderData.totalPaidRevenue / 100).toFixed(2)}` : '$0.00',
+    color: '#27AE60',
+    icon: <MdRateReview size={50} style={{ opacity: 0.2 }} />
+  },
+  {
+    title: 'Pending Revenue',
+    value: orderData?.totalPendingRevenue ? `$${(orderData.totalPendingRevenue / 100).toFixed(2)}` : '$0.00',
+    color: '#F39C12',
+    icon: <MdRateReview size={50} style={{ opacity: 0.2 }} />
+  },
+  {
+    title: 'Total Revenue',
+    value: orderData ? `$${(((orderData.totalPaidRevenue || 0) + (orderData.totalPendingRevenue || 0)) / 100).toFixed(2)}` : '$0.00',
     color: '#1F618D',
     icon: <MdRateReview size={50} style={{ opacity: 0.2 }} />
   }

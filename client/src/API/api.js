@@ -11,9 +11,20 @@ const api = axios.create({
   withCredentials: true
 });
 
-// Add request interceptor for error handling
+// Add request interceptor to include auth token in headers
 api.interceptors.request.use(
   (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    // If token exists, add it to the Authorization header
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`
+      };
+    }
+    
     return config;
   },
   (error) => {
@@ -28,6 +39,15 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle authentication errors
+    if (error.response && error.response.status === 401) {
+      // Token might be expired, clear it
+      if (error.response.data.message === 'Not authorized, token failed' || 
+          error.response.data.message === 'Not authorized, no token') {
+        console.warn('Authentication token is invalid or expired');
+        // You could trigger a logout or token refresh here
+      }
+    }
     console.error('API Response Error:', error);
     return Promise.reject(error);
   }
