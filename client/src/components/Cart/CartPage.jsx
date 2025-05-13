@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
 import {
   Box,
   Typography,
@@ -18,9 +18,10 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../API/api'
 import MuiAlert from '@mui/material/Alert'
+import { AuthContext } from '../../auth/AuthContext'
 
 // Snackbar Alert component
 const Alert = React.forwardRef(function Alert (props, ref) {
@@ -37,10 +38,18 @@ const CartPage = () => {
   const [isCouponApplied, setIsCouponApplied] = useState(false) // Coupon applied state
   const [userId, setUserId] = useState("")
   const [totalWithoutDiscount, setTotalWithoutDiscount] = useState(0) // Store total before discount
-  const [loading, setLoading] = useState(true); 
-
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const { user } = useContext(AuthContext)
+  
   // Function to fetch cart data, using useCallback to memoize
   const fetchCartData = useCallback(async () => {
+    // If user is not logged in, don't make the API call
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    
     setLoading(true); 
     try {
       const response = await api.get('/cart', { withCredentials: true });
@@ -79,14 +88,41 @@ const CartPage = () => {
     } finally {
       setLoading(false); // Stop loading when the async operation is done
     }
-  }, []); // Empty dependency array since we don't want this to recreate
+  }, [user]); // Include user in dependency array
 
   useEffect(() => {
-    fetchCartData()
-  }, [fetchCartData])
+    // Check if user is authenticated before fetching cart data
+    if (user) {
+      fetchCartData();
+    } else {
+      // User is not logged in, redirect to login page
+      setLoading(false);
+      setSnackbarMessage('Please login to view your cart');
+      setSnackbarSeverity('info');
+      setOpenSnackbar(true);
+      
+      // Add a timeout before redirecting to login page
+      // This prevents infinite redirect loops while giving time for the message to be seen
+      const redirectTimer = setTimeout(() => {
+        navigate('/login', { state: { from: '/cart' } });
+      }, 1500);
+      
+      // Clean up timer if component unmounts
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [fetchCartData, user, navigate]);
 
   // Function to update product quantity in the cart
   const handleQuantityChange = async (productId, newQuantity) => {
+    // Check if user is logged in
+    if (!user) {
+      setSnackbarMessage('Please login to update your cart');
+      setSnackbarSeverity('warning');
+      setOpenSnackbar(true);
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+    
     setLoading(true); // Start loading
     try {
       const response = await api.post(
@@ -125,6 +161,15 @@ const CartPage = () => {
 
   // Function to remove product from the cart
   const removeProductFromCart = async productId => {
+    // Check if user is logged in
+    if (!user) {
+      setSnackbarMessage('Please login to manage your cart');
+      setSnackbarSeverity('warning');
+      setOpenSnackbar(true);
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+    
     setLoading(true); // Start loading
     try {
       const response = await api.delete('/cart/remove', {
@@ -166,9 +211,17 @@ const CartPage = () => {
     setOpenSnackbar(false)
   }
 
-  
 // Handle applying a coupon code
 const handleApplyCoupon = async () => {
+  // Check if user is logged in
+  if (!user) {
+    setSnackbarMessage('Please login to apply coupon codes');
+    setSnackbarSeverity('warning');
+    setOpenSnackbar(true);
+    navigate('/login', { state: { from: '/cart' } });
+    return;
+  }
+  
   if (!couponCode.trim()) {
     setSnackbarMessage('Please enter a valid coupon code');
     setSnackbarSeverity('error');
@@ -225,9 +278,47 @@ if (loading) {
   );
 }
 
-  
-
+// If user is not logged in, you can simply render a login message instead of making API calls
+if (!user) {
   return (
+    <Box sx={{ maxWidth: 1200, margin: 'auto', padding: 2, textAlign: 'center', py: 5, mb: 3 }}>
+      <Typography variant="h6" color="text.secondary" gutterBottom>
+        Please log in to view your cart
+      </Typography>
+      <Typography variant="body1" color="text.secondary" paragraph>
+        You need to be logged in to view and manage your shopping cart.
+      </Typography>
+      <Link to='/login' state={{ from: '/cart' }}>
+        <Button
+          variant='contained'
+          color='primary'
+          sx={{
+            mt: 2,
+            mr: 2,
+            backgroundColor: '#38a169',
+            '&:hover': {
+              backgroundColor: '#2f855a'
+            }
+          }}
+        >
+          Log In
+        </Button>
+      </Link>
+      <Link to='/'>
+        <Button
+          variant='outlined'
+          sx={{
+            mt: 2
+          }}
+        >
+          Continue Shopping
+        </Button>
+      </Link>
+    </Box>
+  );
+}
+
+return (
     <Box sx={{ maxWidth: 1200, margin: 'auto', padding: 2 }}>
   <Typography variant='h4' gutterBottom>
     Your Cart

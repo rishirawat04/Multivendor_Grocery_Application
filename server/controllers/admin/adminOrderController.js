@@ -10,7 +10,7 @@ export const getAllOrders = async (req, res) => {
     const userId = req.user._id;  // Assuming req.user contains the logged-in user's information
     const accountType = req.user.accountType; // Vendor or Admin
     const vendorProducts = req.user.products; // Vendor's products
-    console.log("vP",vendorProducts);
+    // console.log("vP",vendorProducts);
 
     let orders;
     let totalPaidAmount = 0;
@@ -50,7 +50,7 @@ export const getAllOrders = async (req, res) => {
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
-    console.log(orders);
+    // console.log(orders);
     
     res.status(200).json({ 
       success: true, 

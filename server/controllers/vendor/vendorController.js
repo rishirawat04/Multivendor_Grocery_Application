@@ -165,20 +165,30 @@ export const getTopSellingProducts = async (req, res) => {
     // Populate product details for each top-selling product
     const topSellingProducts = await Promise.all(
       orders.map(async order => {
-        const product = await Product.findById(order._id).select('name'); // Fetch product name
-        return {
-          id: order._id,
-          name: product ? product.name : 'Unknown Product',
-          amount: order.totalAmount,
-          status: order.paymentStatus,
-          createdAt: order.lastOrderDate
-        };
+        try {
+          const product = await Product.findById(order._id).select('name'); // Fetch product name
+          return {
+            id: order._id,
+            name: product ? product.name : 'Unknown Product',
+            amount: order.totalAmount,
+            status: order.paymentStatus,
+            createdAt: order.lastOrderDate
+          };
+        } catch (err) {
+          return {
+            id: order._id,
+            name: 'Unknown Product',
+            amount: order.totalAmount,
+            status: order.paymentStatus,
+            createdAt: order.lastOrderDate
+          };
+        }
       })
     );
 
     return res.status(200).json({ topSellingProducts });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({ message: 'Server error' });
   }
 };

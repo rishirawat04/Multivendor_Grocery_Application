@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import {
   Box,
   Typography,
@@ -20,8 +20,9 @@ import {
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import api from "../../API/api";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import config from "../../config";
+import { AuthContext } from "../../auth/AuthContext";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -30,6 +31,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 const CheckoutForm = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [cartTotal, setCartTotal] = useState(0);
@@ -61,6 +63,11 @@ const CheckoutForm = () => {
   
   // Use useCallback to memoize the functions for useEffect dependencies
   const fetchCartData = useCallback(async () => {
+    // Don't fetch cart data if user isn't logged in
+    if (!user) {
+      return;
+    }
+    
     try {
       const response = await api.get("/cart", { withCredentials: true });
       const products = response.data.products;
@@ -74,10 +81,16 @@ const CheckoutForm = () => {
     } catch (error) {
       showSnackbar("Failed to load cart details", "error");
     }
-  }, [showSnackbar]);
+  }, [showSnackbar, user]);
 
   // Fetch user details for shipping and billing address
   const fetchUserDetails = useCallback(async () => {
+    // Don't fetch user details if user isn't logged in
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await api.get(`/users/profile/${userId}`, {
@@ -110,21 +123,37 @@ const CheckoutForm = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId, showSnackbar]);
+  }, [userId, showSnackbar, user]);
 
   useEffect(() => {
-    if (userId) {
+    // Redirect unauthenticated users to login
+    if (!user) {
+      setLoading(false);
+      showSnackbar("Please login to access checkout", "info");
+      
+      // Add a timeout before redirecting to login page
+      // This prevents infinite redirect loops while giving time for the message to be seen
+      const redirectTimer = setTimeout(() => {
+        navigate('/login', { state: { from: `/checkout/${userId}` } });
+      }, 1500);
+      
+      // Clean up timer if component unmounts
+      return () => clearTimeout(redirectTimer);
+    }
+    
+    // Only fetch data if the user is logged in and there's a userId
+    if (user && userId) {
       fetchCartData();
       fetchUserDetails();
     }
-  }, [userId, fetchCartData, fetchUserDetails]);
+  }, [userId, fetchCartData, fetchUserDetails, user, navigate, showSnackbar]);
 
   // Display address dialog if user doesn't have a valid address
   useEffect(() => {
-    if (!loading && !hasAddress) {
+    if (!loading && !hasAddress && user) {
       setAddressDialogOpen(true);
     }
-  }, [loading, hasAddress]);
+  }, [loading, hasAddress, user]);
 
   const validateAddress = () => {
     const address = userDetails.addresses[0];
@@ -150,6 +179,12 @@ const CheckoutForm = () => {
   };
 
   const updateUserProfile = async () => {
+    if (!user) {
+      showSnackbar("Please login to update your profile", "warning");
+      navigate('/login', { state: { from: `/checkout/${userId}` } });
+      return;
+    }
+    
     const validation = validateAddress();
     if (!validation.valid) {
       showSnackbar(validation.message, "error");
@@ -200,6 +235,12 @@ const CheckoutForm = () => {
 
   // Wrap verifyPayment function in useCallback to stabilize it
   const verifyPayment = useCallback(async (paymentResponse) => {
+    if (!user) {
+      showSnackbar("Please login to complete payment", "warning");
+      navigate('/login', { state: { from: `/checkout/${userId}` } });
+      return;
+    }
+    
     setOrderProcessing(true);
     try {
       const response = await api.post("/orders/verify-payment", {
@@ -228,7 +269,7 @@ const CheckoutForm = () => {
     } finally {
       setOrderProcessing(false);
     }
-  }, [showSnackbar]);
+  }, [showSnackbar, user, navigate, userId]);
 
   // Create the delivery address object from user details
   const getDeliveryAddress = () => {
@@ -244,6 +285,12 @@ const CheckoutForm = () => {
 
   // Wrap createOrder function in useCallback to stabilize it
   const createOrder = useCallback(async () => {
+    if (!user) {
+      showSnackbar("Please login to place an order", "warning");
+      navigate('/login', { state: { from: `/checkout/${userId}` } });
+      return;
+    }
+    
     // Validate address first
     if (!hasAddress) {
       const validation = validateAddress();
@@ -382,7 +429,7 @@ const CheckoutForm = () => {
       showSnackbar(error.response?.data?.message || "Failed to create order", "error");
       setOrderProcessing(false);
     }
-  }, [cartData, cartTotal, paymentMethod, showSnackbar, userId, userDetails, verifyPayment, hasAddress, validateAddress]);
+  }, [cartData, cartTotal, paymentMethod, showSnackbar, userId, userDetails, verifyPayment, hasAddress, validateAddress, user, navigate]);
 
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);
@@ -399,6 +446,46 @@ const CheckoutForm = () => {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  // If user is not logged in, show login message
+  if (!user) {
+    return (
+      <Box sx={{ maxWidth: 1200, margin: 'auto', padding: 2, textAlign: 'center', py: 5, mb: 3 }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          Please log in to access checkout
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          You need to be logged in to complete your order.
+        </Typography>
+        <Link to='/login' state={{ from: `/checkout/${userId}` }}>
+          <Button
+            variant='contained'
+            color='primary'
+            sx={{
+              mt: 2,
+              mr: 2,
+              backgroundColor: '#38a169',
+              '&:hover': {
+                backgroundColor: '#2f855a'
+              }
+            }}
+          >
+            Log In
+          </Button>
+        </Link>
+        <Link to='/'>
+          <Button
+            variant='outlined'
+            sx={{
+              mt: 2
+            }}
+          >
+            Continue Shopping
+          </Button>
+        </Link>
       </Box>
     );
   }
